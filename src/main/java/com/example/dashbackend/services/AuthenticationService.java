@@ -10,15 +10,20 @@ import com.example.dashbackend.entities.Role;
 import com.example.dashbackend.entities.User;
 
 import com.example.dashbackend.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
+  private final UserDetailsService userDetailsService;
   private final UserRepository repository;
   private final TokenRepository tokenRepository;
   private final PasswordEncoder passwordEncoder;
@@ -36,23 +41,6 @@ public class AuthenticationService {
     var savedUser = repository.save(user);
     var jwtToken = jwtService.generateToken(user);
     saveUserToken(savedUser, jwtToken);
-    return AuthenticationResponse.builder()
-        .token(jwtToken)
-        .build();
-  }
-
-  public AuthenticationResponse authenticate(AuthenticationRequest request) {
-    authenticationManager.authenticate(
-        new UsernamePasswordAuthenticationToken(
-            request.getEmail(),
-            request.getPassword()
-        )
-    );
-    var user = repository.findByEmail(request.getEmail())
-        .orElseThrow();
-    var jwtToken = jwtService.generateToken(user);
-    revokeAllUserTokens(user);
-    saveUserToken(user, jwtToken);
     return AuthenticationResponse.builder()
         .token(jwtToken)
         .build();
@@ -78,5 +66,46 @@ public class AuthenticationService {
       token.setRevoked(true);
     });
     tokenRepository.saveAll(validUserTokens);
+  }
+
+  public String authenticate(AuthenticationRequest request) {
+    authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                    request.getEmail(),
+                    request.getPassword()
+            )
+    );
+    var user = repository.findByEmail(request.getEmail())
+            .orElseThrow();
+    var jwtToken = jwtService.generateToken(user);
+    revokeAllUserTokens(user);
+    saveUserToken(user, jwtToken);
+    return jwtToken;
+  }
+
+  public boolean isAuthenticated(HttpServletRequest request) {
+    String jwt = null;
+    String userEmail = null;
+
+    Cookie[] cookies = request.getCookies();
+    if (cookies != null) {
+      for (Cookie cookie : cookies) {
+        if ("JWT_TOKEN".equals(cookie.getName())) {
+          jwt = cookie.getValue();
+          userEmail = jwtService.extractUsername(jwt);
+          break;
+        }
+      }
+    }
+
+    if (userEmail != null) {
+      UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+      var isTokenValid = tokenRepository.findByToken(jwt)
+              .map(t -> !t.isExpired() && !t.isRevoked())
+              .orElse(false);
+      return jwtService.isTokenValid(jwt, userDetails) && isTokenValid;
+    }
+
+    return false;
   }
 }
