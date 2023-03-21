@@ -24,4 +24,8 @@ public class CategoryService {
     public void deleteCategory(int id) {
         categoryRepository.deleteById(id);
     }
+    public List<Category> getCategoriesByUserId(int userId) {
+        return categoryRepository.findByUserId(userId);
+    }
 }
+
