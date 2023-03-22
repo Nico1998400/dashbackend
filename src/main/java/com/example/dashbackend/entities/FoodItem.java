@@ -1,5 +1,6 @@
 package com.example.dashbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,11 +25,23 @@ public class FoodItem {
     private int foodNumber;
     private Long price;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
+    @ManyToOne()
+    @JoinColumn(name = "category_id" )
+    @JsonBackReference
     private Category category;
 
-    @OneToMany(mappedBy = "foodItem")
+    @OneToMany(mappedBy = "foodItem", fetch = FetchType.LAZY)
     private List<FoodItemExtraChoice> foodItemExtraChoices;
+    @Override
+    public String toString() {
+        return "FoodItem{" +
+                "id=" + id +
+                ", foodName='" + foodName + '\'' +
+                ", foodDescription='" + foodDescription + '\'' +
+                ", foodNumber=" + foodNumber +
+                ", price=" + price +
+                // Don't include the 'category' and 'foodItemExtraChoices' fields to avoid recursion
+                '}';
+    }
 }
 

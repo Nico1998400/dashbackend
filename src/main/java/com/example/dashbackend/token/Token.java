@@ -38,4 +38,16 @@ public class Token {
   @ManyToOne
   @JoinColumn(name = "user_id")
   public User user;
+
+  @Override
+  public String toString() {
+    return "Token{" +
+            "id=" + id +
+            ", token='" + token + '\'' +
+            ", tokenType=" + tokenType +
+            ", revoked=" + revoked +
+            ", expired=" + expired +
+            // ", user=" + user + // Comment out or remove this line
+            '}';
+  }
 }

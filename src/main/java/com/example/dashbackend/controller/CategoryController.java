@@ -22,62 +22,25 @@ import java.util.List;
 @RequestMapping("/api/v1/category")
 @RequiredArgsConstructor
 public class CategoryController {
+
     private final CategoryService categoryService;
-    private final UserRepository userRepository;
-    private final JwtService jwtService;
-    @Autowired
-    private CategoryRepository categoryRepository;
+
     @PostMapping("/post")
     public ResponseEntity<Category> createCategory(@RequestBody Category category, Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        category.setUser(user);
-        Category savedCategory = categoryRepository.save(category);
+        Category savedCategory = categoryService.createCategory(category, authentication);
         return ResponseEntity.ok(savedCategory);
     }
+
     @DeleteMapping("/{id}")
     public void deleteCategory(@PathVariable int id) {
         categoryService.deleteCategory(id);
     }
+
     @GetMapping
     public ResponseEntity<List<Category>> getCategoriesForLoggedInUser(HttpServletRequest request) {
-        User loggedInUser = getUserFromRequest(request);
-        List<Category> categories = categoryService.getCategoriesByUserId(loggedInUser.getId());
+        List<Category> categories = categoryService.getCategoriesForLoggedInUser(request);
         return ResponseEntity.ok(categories);
     }
 
-
-    private User getUserFromRequest(HttpServletRequest request) {
-        String jwt = null;
-        String userEmail = null;
-
-        // First, try to get the JWT token from the cookies
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("JWT_TOKEN".equals(cookie.getName())) {
-                    jwt = cookie.getValue();
-                    userEmail = jwtService.extractUsername(jwt);
-                    break;
-                }
-            }
-        }
-
-        // If the JWT token was not found in the cookies, try to get it from the headers
-        if (jwt == null) {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                jwt = authHeader.substring(7);
-                userEmail = jwtService.extractUsername(jwt);
-            }
-        }
-
-        System.out.println("JWT token: " + jwt);
-        System.out.println("User email: " + userEmail);
-
-        if (userEmail == null) {
-            throw new UsernameNotFoundException("User not found");
-        }
-        return userRepository.findByEmail(userEmail).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    }
-
 }
+
