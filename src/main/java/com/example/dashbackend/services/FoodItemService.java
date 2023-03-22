@@ -33,4 +33,31 @@ public class FoodItemService {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         return categoryService.findByUserIdWithFoodItems(user.getId());
     }
+
+    public FoodItem getFoodItemById(int id) {
+        return foodItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("FoodItem not found"));
+    }
+
+    public FoodItem updateFoodItem(int id, FoodItem updatedFoodItem) {
+        FoodItem foodItem = foodItemRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("FoodItem not found"));
+
+        foodItem.setFoodName(updatedFoodItem.getFoodName());
+        foodItem.setFoodDescription(updatedFoodItem.getFoodDescription());
+        foodItem.setFoodNumber(updatedFoodItem.getFoodNumber());
+        foodItem.setPrice(updatedFoodItem.getPrice());
+
+        Category existingCategory = categoryRepository.findById(updatedFoodItem.getCategory().getId())
+                .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        existingCategory.setUser(foodItem.getCategory().getUser());
+        foodItem.setCategory(existingCategory);
+
+        return foodItemRepository.save(foodItem);
+    }
+
+    public void deleteFoodItem(int id) {
+        foodItemRepository.deleteById(id);
+    }
 }

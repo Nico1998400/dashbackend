@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,15 @@ public class CategoryService {
     public List<Category> getCategoriesForLoggedInUser(HttpServletRequest request) {
         User loggedInUser = getUserFromRequest(request);
         return categoryRepository.findByUserId(loggedInUser.getId());
+    }
+
+    public Category getCategoryById(int id) {
+        Optional<Category> category = categoryRepository.findById(id);
+        return category.orElse(null);
+    }
+
+    public Category updateCategory(Category category) {
+        return categoryRepository.save(category);
     }
 
     private User getUserFromRequest(HttpServletRequest request) {

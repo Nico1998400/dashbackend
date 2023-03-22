@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:3000/", allowCredentials = "true")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RestController
 @RequestMapping("/api/v1/fooditem")
 @RequiredArgsConstructor
@@ -26,9 +26,22 @@ public class FoodItemController {
         return ResponseEntity.ok(savedFoodItem);
     }
 
-    @GetMapping
-    public List<Category> getUserCategories(Authentication authentication) {
-        return foodItemService.getUserCategories(authentication.getName());
+    @GetMapping("/{id}")
+    public ResponseEntity<FoodItem> getFoodItemById(@PathVariable int id) {
+        FoodItem foodItem = foodItemService.getFoodItemById(id);
+        return ResponseEntity.ok(foodItem);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<FoodItem> updateFoodItem(@PathVariable int id, @RequestBody FoodItem updatedFoodItem) {
+        FoodItem foodItem = foodItemService.updateFoodItem(id, updatedFoodItem);
+        return ResponseEntity.ok(foodItem);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFoodItem(@PathVariable int id) {
+        foodItemService.deleteFoodItem(id);
+        return ResponseEntity.noContent().build();
     }
 
 }
