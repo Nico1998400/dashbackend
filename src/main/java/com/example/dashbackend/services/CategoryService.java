@@ -7,8 +7,6 @@ import com.example.dashbackend.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.Hibernate;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +21,10 @@ public class CategoryService {
     private final JwtService jwtService;
     private final CategoryRepository categoryRepository;
 
-    public Category createCategory(Category category, Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        category.setUser(user);
+    public Category createCategory(Category category, HttpServletRequest request) {
+        User loggedInUser = getUserFromRequest(request);
+        category.setUser(loggedInUser);
         return categoryRepository.save(category);
-    }
-
-    public void deleteCategory(int id) {
-        categoryRepository.deleteById(id);
     }
 
     public List<Category> getCategoriesForLoggedInUser(HttpServletRequest request) {
@@ -38,16 +32,31 @@ public class CategoryService {
         return categoryRepository.findByUserId(loggedInUser.getId());
     }
 
-    public Category getCategoryById(int id) {
+    public void deleteCategory(int id, HttpServletRequest request) {
+        User loggedInUser = getUserFromRequest(request);
+        Category category = getCategoryById(id, request);
+        if (category != null && loggedInUser.getId().equals(category.getUser().getId())) {
+            categoryRepository.deleteById(id);
+        }
+    }
+
+    public Category getCategoryById(int id, HttpServletRequest request) {
+        User loggedInUser = getUserFromRequest(request);
         Optional<Category> category = categoryRepository.findById(id);
-        return category.orElse(null);
+        return category.filter(c -> loggedInUser.getId().equals(c.getUser().getId())).orElse(null);
     }
 
-    public Category updateCategory(Category category) {
-        return categoryRepository.save(category);
+    public Category updateCategory(int id, Category updatedCategory, HttpServletRequest request) {
+        User loggedInUser = getUserFromRequest(request);
+        Category category = getCategoryById(id, request);
+        if (category != null && loggedInUser.getId().equals(category.getUser().getId())) {
+            category.setCategoryTitle(updatedCategory.getCategoryTitle());
+            return categoryRepository.save(category);
+        }
+        return null;
     }
 
-    private User getUserFromRequest(HttpServletRequest request) {
+    User getUserFromRequest(HttpServletRequest request) {
         String jwt = null;
         String userEmail = null;
 
@@ -76,12 +85,6 @@ public class CategoryService {
             throw new UsernameNotFoundException("User not found");
         }
         return userRepository.findByEmail(userEmail).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    }
-
-    public List<Category> findByUserIdWithFoodItems(Integer userId) {
-        List<Category> categories = categoryRepository.findByUserId(userId);
-        categories.forEach(category -> Hibernate.initialize(category.getFoodItems()));
-        return categories;
     }
 
 }
