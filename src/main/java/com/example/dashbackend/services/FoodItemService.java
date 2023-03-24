@@ -5,24 +5,21 @@ import com.example.dashbackend.entities.FoodItem;
 import com.example.dashbackend.entities.User;
 import com.example.dashbackend.repository.CategoryRepository;
 import com.example.dashbackend.repository.FoodItemRepository;
-import com.example.dashbackend.repository.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FoodItemService {
 
     private final CategoryRepository categoryRepository;
-    private final CategoryService categoryService;
     private final FoodItemRepository foodItemRepository;
 
-    public FoodItem createFoodItem(FoodItem foodItem, HttpServletRequest request) {
-        User user = categoryService.getUserFromRequest(request);
+    public FoodItem createFoodItem(FoodItem foodItem, User user) {
         Category existingCategory = categoryRepository.findById(foodItem.getCategory().getId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -31,15 +28,20 @@ public class FoodItemService {
         return foodItemRepository.save(foodItem);
     }
 
-    public FoodItem getFoodItemById(int id, HttpServletRequest request) {
-        User user = categoryService.getUserFromRequest(request);
+    public List<FoodItem> getAllFoodItems(User user) {
+        List<FoodItem> foodItems = foodItemRepository.findAll();
+        return foodItems.stream()
+                .filter(f -> user.getId().equals(f.getCategory().getUser().getId()))
+                .collect(Collectors.toList());
+    }
+
+    public FoodItem getFoodItemById(int id, User user) {
         Optional<FoodItem> foodItem = foodItemRepository.findById(id);
         return foodItem.filter(f -> user.getId().equals(f.getCategory().getUser().getId())).orElseThrow(() -> new RuntimeException("FoodItem not found"));
     }
 
-    public FoodItem updateFoodItem(int id, FoodItem updatedFoodItem, HttpServletRequest request) {
-        User user = categoryService.getUserFromRequest(request);
-        FoodItem foodItem = getFoodItemById(id, request);
+    public FoodItem updateFoodItem(int id, FoodItem updatedFoodItem, User user) {
+        FoodItem foodItem = getFoodItemById(id, user);
 
         foodItem.setFoodName(updatedFoodItem.getFoodName());
         foodItem.setFoodDescription(updatedFoodItem.getFoodDescription());
@@ -55,13 +57,11 @@ public class FoodItemService {
         return foodItemRepository.save(foodItem);
     }
 
-    public void deleteFoodItem(int id, HttpServletRequest request) {
-        User user = categoryService.getUserFromRequest(request);
-        FoodItem foodItem = getFoodItemById(id, request);
+    public void deleteFoodItem(int id, User user) {
+        FoodItem foodItem = getFoodItemById(id, user);
         if (user.getId().equals(foodItem.getCategory().getUser().getId())) {
             foodItemRepository.deleteById(id);
         }
     }
-
 
 }

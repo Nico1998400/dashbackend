@@ -21,35 +21,30 @@ public class CategoryService {
     private final JwtService jwtService;
     private final CategoryRepository categoryRepository;
 
-    public Category createCategory(Category category, HttpServletRequest request) {
-        User loggedInUser = getUserFromRequest(request);
-        category.setUser(loggedInUser);
+    public Category createCategory(Category category, User user) {
+        category.setUser(user);
         return categoryRepository.save(category);
     }
 
-    public List<Category> getCategoriesForLoggedInUser(HttpServletRequest request) {
-        User loggedInUser = getUserFromRequest(request);
-        return categoryRepository.findByUserId(loggedInUser.getId());
+    public List<Category> getCategoriesForLoggedInUser(User user) {
+        return categoryRepository.findByUserId(user.getId());
     }
 
-    public void deleteCategory(int id, HttpServletRequest request) {
-        User loggedInUser = getUserFromRequest(request);
-        Category category = getCategoryById(id, request);
-        if (category != null && loggedInUser.getId().equals(category.getUser().getId())) {
+    public void deleteCategory(int id, User user) {
+        Category category = getCategoryById(id, user);
+        if (category != null && user.getId().equals(category.getUser().getId())) {
             categoryRepository.deleteById(id);
         }
     }
 
-    public Category getCategoryById(int id, HttpServletRequest request) {
-        User loggedInUser = getUserFromRequest(request);
+    public Category getCategoryById(int id, User user) {
         Optional<Category> category = categoryRepository.findById(id);
-        return category.filter(c -> loggedInUser.getId().equals(c.getUser().getId())).orElse(null);
+        return category.filter(c -> user.getId().equals(c.getUser().getId())).orElse(null);
     }
 
-    public Category updateCategory(int id, Category updatedCategory, HttpServletRequest request) {
-        User loggedInUser = getUserFromRequest(request);
-        Category category = getCategoryById(id, request);
-        if (category != null && loggedInUser.getId().equals(category.getUser().getId())) {
+    public Category updateCategory(int id, Category updatedCategory, User user) {
+        Category category = getCategoryById(id, user);
+        if (category != null && user.getId().equals(category.getUser().getId())) {
             category.setCategoryTitle(updatedCategory.getCategoryTitle());
             return categoryRepository.save(category);
         }

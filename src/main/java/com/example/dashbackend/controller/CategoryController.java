@@ -1,10 +1,12 @@
 package com.example.dashbackend.controller;
 
 import com.example.dashbackend.entities.Category;
+import com.example.dashbackend.entities.User;
 import com.example.dashbackend.services.CategoryService;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,24 +20,29 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping("/post")
-    public ResponseEntity<Category> createCategory(Category category, HttpServletRequest request) {
-        Category savedCategory = categoryService.createCategory(category, request);
+    public ResponseEntity<?> createCategory(@Valid @RequestBody Category category, @AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.badRequest().body("User not found");
+        }
+        System.out.println("Received category: " + category + user);
+        Category savedCategory = categoryService.createCategory(category, user);
         return ResponseEntity.ok(savedCategory);
     }
+
     @GetMapping
-    public ResponseEntity<List<Category>> getCategoriesForLoggedInUser(HttpServletRequest request) {
-        List<Category> categories = categoryService.getCategoriesForLoggedInUser(request);
+    public ResponseEntity<List<Category>> getCategoriesForLoggedInUser(@AuthenticationPrincipal User user) {
+        List<Category> categories = categoryService.getCategoriesForLoggedInUser(user);
         return ResponseEntity.ok(categories);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCategory(@PathVariable int id, HttpServletRequest request) {
-        categoryService.deleteCategory(id, request);
+    public void deleteCategory(@PathVariable int id, @AuthenticationPrincipal User user) {
+        categoryService.deleteCategory(id, user);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable int id, HttpServletRequest request) {
-        Category category = categoryService.getCategoryById(id, request);
+    public ResponseEntity<Category> getCategoryById(@PathVariable int id, @AuthenticationPrincipal User user) {
+        Category category = categoryService.getCategoryById(id, user);
         if (category == null) {
             return ResponseEntity.notFound().build();
         }
@@ -43,8 +50,8 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Category> updateCategory(@PathVariable int id, @RequestBody Category updatedCategory, HttpServletRequest request) {
-        Category category = categoryService.updateCategory(id, updatedCategory, request);
+    public ResponseEntity<Category> updateCategory(@PathVariable int id, @RequestBody Category updatedCategory, @AuthenticationPrincipal User user) {
+        Category category = categoryService.updateCategory(id, updatedCategory, user);
         if (category == null) {
             return ResponseEntity.notFound().build();
         }
