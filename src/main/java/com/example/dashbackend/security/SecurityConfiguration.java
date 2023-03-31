@@ -37,7 +37,7 @@ public class SecurityConfiguration {
             .authorizeHttpRequests()
             .requestMatchers("/api/v1/auth/**").permitAll()
             .requestMatchers("/api/v1/category/**").authenticated()
-            .requestMatchers("/api/v1/restaurants/**").permitAll()
+            .requestMatchers("/api/v1/extrachoice**").permitAll()
             .requestMatchers("/api/v1/fooditem/**").permitAll()
             .anyRequest()
             .authenticated()
