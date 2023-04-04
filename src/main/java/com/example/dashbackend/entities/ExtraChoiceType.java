@@ -1,5 +1,6 @@
 package com.example.dashbackend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,4 +18,9 @@ public class ExtraChoiceType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
+
+    @ManyToOne
+    @JoinColumn(name = "extra_choice_id")
+    @JsonIgnore
+    private ExtraChoice extraChoice;
 }

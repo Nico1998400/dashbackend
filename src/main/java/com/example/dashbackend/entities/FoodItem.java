@@ -2,6 +2,7 @@ package com.example.dashbackend.entities;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIdentityReference(alwaysAsId = true)
 @Entity
 @Table(name = "_food_item")
 public class FoodItem {
@@ -34,6 +33,7 @@ public class FoodItem {
     private Category category;
 
     @OneToMany(mappedBy = "foodItem", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<FoodItemExtraChoice> foodItemExtraChoices;
 
     @Override

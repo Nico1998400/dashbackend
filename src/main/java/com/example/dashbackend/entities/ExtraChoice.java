@@ -16,8 +16,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-@JsonIdentityReference(alwaysAsId = true)
 @Entity
 @Table(name = "_extra_choice")
 public class ExtraChoice {
@@ -26,9 +24,8 @@ public class ExtraChoice {
     private int id;
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "extra_choice_type_id")
-    private ExtraChoiceType type;
+    @OneToMany(mappedBy = "extraChoice",fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ExtraChoiceType> extraChoiceTypes;
 
     @OneToMany(mappedBy = "extraChoice")
     @JsonIgnore

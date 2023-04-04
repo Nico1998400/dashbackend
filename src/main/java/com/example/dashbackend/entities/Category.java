@@ -27,6 +27,7 @@ public class Category {
     private User user;
 
     @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<FoodItem> foodItems;
     @Override
     public String toString() {
